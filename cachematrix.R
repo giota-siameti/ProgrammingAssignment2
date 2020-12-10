@@ -117,4 +117,46 @@ getting cached data
      [,1] [,2]
 [1,]    3    7
 [2,]    1    5
-> 
+
+## The functions below, cache the value of the inverse of a matrix to save recalculation costs.
+## The inverse of the matrix is firstly looked up in the cache
+## If the inverse has been previously calculated,then it is retrieved from cache.
+## If not,a new inverse is calculated and the result is cached in memory.
+## The sign "<<" and the name masking (function()) are used as application of lexical scoping.
+## These two applications are used to assign values to objects in a different environment from the current one.
+
+## The makeCacheMatrix() creates a special matrix that can cache its inverse. 
+## More specifically, the special matrix is a list of functions to set and get the value of the matrix and the inverse.
+## The set functions assign(using the "<<" operator)the matrix and its inverse to a different environment from the current.
+## The get functions,using function(), retrieve the values of the matrix and its inverse from the different environment.
+makeCacheMatrix <- function(x = matrix()) {
+   inv<-NULL
+   set<-function(y){
+       x<<-y
+       inv<<-NULL
+    }
+   get<-function()x
+   setinverse<- function(inverse) inv<<-inverse
+   getinverse<-function() inv
+   list(set=set, get=get,setinverse=setinverse,getinverse=getinverse)
+}
+
+
+## The cacheSolve() computes the inverse of the matrix returned by the makeCacheMatrix().
+## Firstly, it checks if the inverse has been already calculated and it is stored in cache.
+## in case a value is found for the inverse, it is retrieved from cache.
+## If the value for the inverse is null, then a new inverse is calculated using solve().
+## Finally the new inverse is stored in cache.
+
+cacheSolve <- function(x, ...) {
+    ## Return a matrix that is the inverse of 'x'
+    inv<-x$getinverse()
+    if(!is.null(inv)) {
+        message("getting cached data")
+        return(inv)
+    }
+    data<-x$get()
+    inv<- solve(data,...)
+    x$setinverse(inv)
+    inv
+}
